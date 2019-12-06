@@ -37,43 +37,48 @@ public class ChatServerHandler  extends SimpleChannelInboundHandler<String> {
         }
         //加入队列
         channels.add(inComing);
+
     }
 
-    /**
-     * 断开连接
-     * @param ctx
-     * @throws Exception
-     */
-    @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        // 获得客户端通道
-        Channel outComing = ctx.channel();
-        //通知其他客户端有人离开
-        for (Channel channel : channels){
-            if (channel != outComing) {
-                channel.writeAndFlush("[再见: ]" + outComing.remoteAddress() + " 离开聊天室！\n");
-            }
-        }
-
-        channels.remove(outComing);
-    }
+//    /**
+//     * 断开连接
+//     * @param ctx
+//     * @throws Exception
+//     */
+//    @Override
+//    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+//        // 获得客户端通道
+//        Channel outComing = ctx.channel();
+//        //通知其他客户端有人离开
+//        for (Channel channel : channels){
+//            if (channel != outComing) {
+//                channel.writeAndFlush("[再见: ]" + outComing.remoteAddress() + " 离开聊天室！\n");
+//            }
+//        }
+//        channels.remove(outComing);
+//    }
 
     /**
      * 每当从客户端有消息写入时
      * @param channelHandlerContext
-     * @param s
+     * @param message
      * @throws Exception
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String message) throws Exception {
         Channel inComing = channelHandlerContext.channel();
-        for (Channel channel : channels){
-            if (channel != inComing){
-                channel.writeAndFlush("[用户" + inComing.remoteAddress() + " 说：]" + s + "\n");
-            }else {
-                channel.writeAndFlush("[我说：]" + s + "\n");
+        if("登录".equalsIgnoreCase(message)){
+            ChatServerContainer.put("1",inComing);
+        }else{
+            for (Channel channel : channels){
+                if (channel != inComing){
+                    channel.writeAndFlush("[用户" + inComing.remoteAddress() + " 说：]" + message + "\n");
+                }else {
+                    channel.writeAndFlush("[我说：]" + message + "\n");
+                }
             }
         }
+
     }
 
     /**
@@ -87,21 +92,33 @@ public class ChatServerHandler  extends SimpleChannelInboundHandler<String> {
         System.out.println("[" + inComing.remoteAddress() + "]: 在线");
     }
 
-    /**
-     * 离线
-     * @param ctx
-     * @throws Exception
-     */
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Channel inComing = ctx.channel();
-        System.out.println("[" + inComing.remoteAddress() + "]: 离线");
-    }
+//    /**
+//     * 离线
+//     * @param ctx
+//     * @throws Exception
+//     */
+//    @Override
+//    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+//        Channel inComing = ctx.channel();
+//        System.out.println("[" + inComing.remoteAddress() + "]: 离线~~~~~~~~~~~");
+//    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         Channel inComing = ctx.channel();
         System.out.println(inComing.remoteAddress() + "通讯异常！");
         ctx.close();
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        System.out.println(evt);
+        if(evt.equals("实时采集")){
+            System.out.println("取出对应的连接，写入数据");
+            Channel channel = ChatServerContainer.get("1");
+            channel.writeAndFlush("请执行实时采集");
+        }else{
+            super.userEventTriggered(ctx,evt);
+        }
     }
 }

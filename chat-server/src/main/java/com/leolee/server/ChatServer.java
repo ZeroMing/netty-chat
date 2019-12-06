@@ -1,24 +1,34 @@
 package com.leolee.server;
 
+import com.leolee.server.http.HttpServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.stereotype.Component;
 
 /**
  * @Description: 聊天室服务端
  * @Author: LeoLee
  * @Date: 2019年11月04 00时18分
  */
-public class ChatServer {
+@Component
+public class ChatServer implements ApplicationRunner {
 
     private int port;
+
+    public ChatServer(){
+    }
 
     public ChatServer(int port){
         this.port = port;
     }
+
 
     /**
      * 启动服务端
@@ -29,7 +39,6 @@ public class ChatServer {
         //两个Reactor 一个用于服务端接收客户端的连接，另一个用于进行SocketChannel的网络读写
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-
 
 
         //绑定监听端口，调用sync同步阻塞方法等待绑定操作完成，完成后返回ChannelFuture类似于JDK中Future
@@ -55,15 +64,10 @@ public class ChatServer {
         }
     }
 
-
-
-    public static void main(String[] args) {
-        ChatServer chatServer = new ChatServer(9999);
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println("启动Netty服务器...");
+        ChatServer chatServer = new ChatServer(8888);
         chatServer.bootStrap();
+
     }
-
-
-
-
-
 }

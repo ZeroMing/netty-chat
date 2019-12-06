@@ -1,5 +1,6 @@
 package com.leolee.server;
 
+import com.leolee.server.heartbeat.HeartBeatServerHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -7,6 +8,9 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.timeout.IdleStateHandler;
+
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -28,9 +32,12 @@ public class ChatServerInitializer  extends ChannelInitializer<SocketChannel> {
          * 固定分隔符
          * 将消息分成消息体和消息头，在消息头中用一个数组说明消息体的长度
          */
-        pipeline.addLast("frame",new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
-        pipeline.addLast("decode",new StringDecoder()); //解码器
+        // pipeline.addLast("frame",new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
+        pipeline.addLast(new IdleStateHandler(5, 0, 0, TimeUnit.SECONDS));
+        // 解码器
+        pipeline.addLast("decode",new StringDecoder());
         pipeline.addLast("encode",new StringEncoder());
         pipeline.addLast("handler",new ChatServerHandler());
+        pipeline.addLast("heartBeat",new HeartBeatServerHandler());
     }
 }
